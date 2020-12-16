@@ -1,0 +1,70 @@
+ffmpeg 从现有视频中截取一段
+      1. ffmpeg -i ./input.mp4 -vcodec copy -acodec copy -ss 00:00:10 -to 00:00:25 ./output.mp4 -y
+	input: 输入视频文件名
+	output: 输出视频文件名
+	-vcodec copy: 使用与原视频一样的视频编解码器
+	-acodec copy: 使用与原视频一样的音频编解码器
+	-i: input file
+	-y: overwrite output files without asking
+	-to: 结束时间
+	-ss: 起始时间
+      上述命令从视频的第 10s (-ss 00:00:10) 开始截取，到视频的第 25s (-to 00:00:25) 结束，共计截出视频 15s.
+
+      2. ffmpeg -ss 00:01:20 -t 00:00:30 -accurate_seek -i ./input.mp4 -vcodec copy -acodec copy ./output.mp4 -y
+	截取时间段不准确，不建议使用。
+	input: 输入视频文件名
+	output: 输出视频文件名
+	-vcodec copy: 使用与原视频一样的视频编解码器
+	-acodec copy: 使用与原视频一样的音频编解码器
+	-i: input file
+	-y: overwrite output files without asking
+	-t: 截取时长
+	-ss: 起始时间
+      上述命令从视频的第 1 分 20 秒 (-ss 00:01:20) 开始截取，截取 30 秒 (-t 00:00:30) 视频。
+      截取速度快，因为它不会对视频重新编码，直接截取相关时间，导出视频。但是这种方式会导致：如果视频结尾不是关键帧，那么视频最后就会出现一段空白。
+
+      3. ffmpeg -ss 00:01:20 -t 00:00:30 -accurate_seek -i ./input.mp4 -vcodec copy -acodec copy -avoid_negative_ts 1 ./output.mp4 -y
+	截取时间段不准确，不建议使用。
+      截取视频之后，空白视频消失，但是时间不会精确截取，它会找到下一个关键帧，补全这个视频，导致连续分割的视频之间存在细微的交集。
+
+      4. ffmpeg -ss 00:01:20 -t 00:00:30 -i ./input.mp4 -c:v libx264 -c:a aac -strict experimental -b:a 98k ./output.mp4
+	截取时间段准确，建议使用。
+
+      如果需要精确截取视频，避免关键帧的丢失并精确截取时间，建议重新编码视频。
+
+
+ffmpeg截取视频片段（linux）:
+简单命令：
+      ffmpeg -i input.mp4 -ss 1:05 -t 10 output.mp4
+	-ss 5指定从输入视频第1:05秒开始截取，-t 10指明最多截取10秒。
+
+但是上面的命令可能会比较慢，更好的命令如下：
+      ffmpeg -ss 1:05 -i input.mp4 -t 10 -c:v copy -c:a copy output.mp4
+	把-ss 1:05放到-i前面，与原来的区别是，这样会先跳转到第1:05秒在开始解码输入视频，而原来的会从开始解码，只是丢弃掉前1:05秒的结果。
+	-c:v 和 -c:a分别指定视频和音频的编码格式。
+	-c:v copy -c:a copy标示视频与音频的编码不发生改变，而是直接复制，这样会大大提升速度。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
